@@ -1,0 +1,51 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Customer {
+  @@map("customers")
+  id String @id @default(uuid())
+  name String @db.VarChar(255)
+  email String @db.VarChar(255)
+  phone String @db.VarChar(255)
+  dateCreated DateTime @default(now())
+  customerOrders Order[]
+}
+
+model Product {
+  @@map("products")
+  id String @id @default(uuid())
+  name String @db.VarChar(255)
+  price Decimal
+  category String @db.VarChar(255)
+  description String @db.VarChar(255)
+  quantity Int
+  dateCreated DateTime @default(now())
+  productOrders Order[]
+}
+
+model Order {
+  @@map("orders")
+  id String @id @default(uuid())
+  quantity Int 
+  dateCreated DateTime @default(now())
+  status Status @default(PENDING)
+  customer Customer? @relation(fields: [customerId], references: [id])
+  customerId String?
+  product Product? @relation(fields: [productId], references: [id])
+  productId String?
+}
+
+enum Status{
+  DELIVERED
+  PENDING
+  SHIPPED
+}
