@@ -1,13 +1,7 @@
-import { UserType, Gender } from '@prisma/client';
-import {
-  IsString,
-  IsNotEmpty,
-  IsOptional,
-  IsEnum,
-  IsEmail,
-} from 'class-validator';
+import { UserType, Gender } from "@prisma/client";
+import { IsString, IsNotEmpty, IsOptional, IsEnum, IsEmail } from "class-validator";
 
-export class CreateCustomerDto {
+export class CustomerUpdateProfile {
   @IsString()
   @IsNotEmpty()
   name: string;

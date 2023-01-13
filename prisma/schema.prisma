@@ -11,41 +11,70 @@ datasource db {
 }
 
 model Customer {
-  @@map("customers")
-  id String @id @default(uuid())
-  name String @db.VarChar(255)
-  email String @db.VarChar(255)
-  phone String @db.VarChar(255)
-  dateCreated DateTime @default(now())
+  id             String   @id @default(uuid())
+  name           String   @db.VarChar(255)
+  email          String   @unique @db.VarChar(255)
+  phone          String   @db.VarChar(255)
+  password       String   @db.VarChar(255)
+  userType       UserType @default(Customer)
+  gender         Gender @default(Male)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   customerOrders Order[]
+
+  @@map("customers")
 }
 
 model Product {
-  @@map("products")
-  id String @id @default(uuid())
-  name String @db.VarChar(255)
-  price Decimal
-  category String @db.VarChar(255)
-  description String @db.VarChar(255)
-  quantity Int
-  dateCreated DateTime @default(now())
+  id            String    @id @default(uuid())
+  name          String    @db.VarChar(255)
+  price         Decimal
+  description   String    @db.VarChar(255)
+  quantity      Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
   productOrders Order[]
+  Category      Category? @relation(fields: [categoryId], references: [id])
+  categoryId    String?
+
+  @@map("products")
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String    @db.VarChar(255)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  products Product[]
+  @@map("categories")
 }
 
 model Order {
+  id          String    @id @default(uuid())
+  quantity    Int
+  status      Status    @default(PENDING)
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  customerId  String?
+  product     Product?  @relation(fields: [productId], references: [id])
+  productId   String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
   @@map("orders")
-  id String @id @default(uuid())
-  quantity Int 
-  dateCreated DateTime @default(now())
-  status Status @default(PENDING)
-  customer Customer? @relation(fields: [customerId], references: [id])
-  customerId String?
-  product Product? @relation(fields: [productId], references: [id])
-  productId String?
 }
 
-enum Status{
+enum Status {
   DELIVERED
   PENDING
   SHIPPED
+}
+
+enum UserType{
+  Customer
+  Admin
+}
+
+enum Gender {
+  Female
+  Male
 }

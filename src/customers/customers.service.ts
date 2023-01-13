@@ -1,45 +1,56 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateCustomerDto } from './dto/create-customer.dto';
-import { UpdateCustomerDto } from './dto/update-customer.dto';
 import { PrismaService } from 'src/prisma/prisma.service';
-import { Customer } from '@prisma/client';
+import { CustomerResponse } from './dto/customer-response.dto';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class CustomersService {
   constructor(private prisma: PrismaService) {}
 
-  async create(createCustomerDto: CreateCustomerDto): Promise<Customer> {
-    return await this.prisma.customer.create({
-      data: { ...createCustomerDto },
+  async create(createCustomerDto: CreateCustomerDto): Promise<CustomerResponse> {
+    const { email, password } = createCustomerDto;
+    //----> Check for existence of user.
+
+    const user = await this.prisma.customer.findUnique({
+      where: { email },
     });
+
+    if (user) {
+      throw new BadRequestException('User already exists');
+    }
+
+    //----> Hash password for user
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    //----> Create new user
+    const newUser = await this.prisma.customer.create({
+      data: {
+        ...createCustomerDto,
+        password: hashedPassword,
+      },
+    });
+
+    //----> Send the token to the client.
+    return {
+      id: newUser.id,
+      name: newUser.name,
+      userType: newUser.userType,
+      message: 'Customer signup is successful.',
+    };
   }
 
-  async findAll(): Promise<Customer[]> {
+  async findAll(): Promise<CustomerResponse[]> {
     return await this.prisma.customer.findMany({
-      include: {
-        customerOrders: true,
+      select: {        
+        id: true,
+        name: true,
+        userType: true,
       },
     });
   }
 
-  async findOne(id: string): Promise<Customer> {
-    const customer = await this.prisma.customer.findUnique({
-      where: { id },
-      include: {
-        customerOrders: true,
-      },
-    });
-
-    if (!customer) {
-      throw new NotFoundException(`Customer with id = ${id} is not found.`);
-    }
-    return customer;
-  }
-
-  async update(
-    id: string,
-    updateCustomerDto: UpdateCustomerDto,
-  ): Promise<Customer> {
+  async findOne(id: string): Promise<CustomerResponse> {
     const customer = await this.prisma.customer.findUnique({
       where: { id },
     });
@@ -47,14 +58,15 @@ export class CustomersService {
     if (!customer) {
       throw new NotFoundException(`Customer with id = ${id} is not found.`);
     }
-
-    return await this.prisma.customer.update({
-      where: { id },
-      data: { ...updateCustomerDto },
-    });
+    return {
+      id: customer.id, 
+      name: customer.name, 
+      userType: customer.userType
+    };
   }
 
-  async remove(id: string): Promise<Customer> {
+  
+  async remove(id: string): Promise<CustomerResponse> {
     const customer = await this.prisma.customer.findUnique({
       where: { id },
     });
@@ -65,6 +77,11 @@ export class CustomersService {
 
     return await this.prisma.customer.delete({
       where: { id },
+      select: {
+        id: true,
+        name: true,
+        userType: true,
+      },
     });
   }
 }
