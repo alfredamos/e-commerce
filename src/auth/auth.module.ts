@@ -1,11 +1,10 @@
-import { JwtStrategy } from "./jwt-strategy";
 import { Module } from '@nestjs/common';
+import { JwtStrategy } from './jwt-strategy';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { PrismaModule } from '../prisma/prisma.module';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
-import { RolesGuard } from "./guards/roles.guard";
 
 @Module({
   imports: [

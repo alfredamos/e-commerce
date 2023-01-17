@@ -23,11 +23,11 @@ export class RolesGuard implements CanActivate {
       return true;
     }
 
-    const request = context.switchToHttp().getRequest();
-    const id = request.params;
-    console.log("orderId : ", id);
-
+    const request = context.switchToHttp().getRequest();   
     const user = request.user;
+
+    console.log({user});
+    
 
     if (!user) {
       throw new BadRequestException(
